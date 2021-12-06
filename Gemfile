@@ -11,8 +11,9 @@ gemspec
 # your gem to rubygems.org.
 
 gem "rails", ">= 5.2.4.6", "< 6.2"
-gem 'pry', group: [:development, :test]
 
 group :development, :test do
   gem 'rubocop'
+  gem 'pry'
+  gem 'pry-nav'
 end

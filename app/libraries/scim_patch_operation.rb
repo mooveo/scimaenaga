@@ -6,11 +6,12 @@ class ScimPatchOperation
 
   def initialize(op, path, value, mutable_attributes_schema)
     # FIXME: Raise proper Error
-    raise StandardError unless op.in? %w[Add Replace Remove]
+    raise StandardError unless op.downcase.in? %w[add replace remove]
 
     # No path is not supported.
     # FIXME: Raise proper Error
-    raise StandardError if path.nil?
+    raise ScimRails::ExceptionHandler::UnsupportedPatchRequest if path.nil?
+    raise ScimRails::ExceptionHandler::UnsupportedPatchRequest if value.nil?
 
     @op = op.downcase.to_sym
     @path_scim = path
@@ -22,31 +23,33 @@ class ScimPatchOperation
   def apply(model)
     case @op
     when :add
-      model.assign_attributes(@path_sp, @value)
+      model.attributes = { @path_sp => @value }
     when :replace
-      model.assign_attributes(@path_sp, @value)
+      model.attributes = { @path_sp => @value }
     when :remove
-      model.assign_attributes(@path_sp, nil)
+      model.attributes = { @path_sp => nil }
     end
   end
 
   private
 
-  def convert_path(path, mutable_attributes_schema)
-    # For now, library does not support Multi-Valued Attributes properly.
-    # examle:
-    #   path = 'emails[type eq "work"].value'
-    #   mutable_attributes_schema = {
-    #     emails: [
-    #       {
-    #         value: :mail_address,
-    #      }
-    #     ],
-    #   }
-    #
-    #   Library ignores filter conditions (like [type eq "work"])
-    #   and always uses the first element of the array
-    dig_keys = path.gsub(/\[(.+?)\]/, ".0").split(".").map { |step| step == "0" ? 0 : step.to_sym }
-    mutable_attributes_schema.dig(*dig_keys)
-  end
+    def convert_path(path, mutable_attributes_schema)
+      # For now, library does not support Multi-Valued Attributes properly.
+      # examle:
+      #   path = 'emails[type eq "work"].value'
+      #   mutable_attributes_schema = {
+      #     emails: [
+      #       {
+      #         value: :mail_address,
+      #      }
+      #     ],
+      #   }
+      #
+      #   Library ignores filter conditions (like [type eq "work"])
+      #   and always uses the first element of the array
+      dig_keys = path.gsub(/\[(.+?)\]/, ".0").split(".").map do |step|
+        step == "0" ? 0 : step.to_sym
+      end
+      mutable_attributes_schema.dig(*dig_keys)
+    end
 end
