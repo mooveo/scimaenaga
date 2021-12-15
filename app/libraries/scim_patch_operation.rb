@@ -19,17 +19,42 @@ class ScimPatchOperation
     @value = value
   end
 
-  # WIP
-  def apply(model)
+
+
+
+  def save(model)
+    if @path_scim == 'members' # Only members are supported for value is an array
+      update_member_ids = @value.map do |v|
+        v[ScimRails.config.group_member_relation_schema.keys.first]
+      end
+
+      current_member_ids = model
+                           .public_send(ScimRails.config.group_member_relation_attribute)
+      case @op
+      when :add
+        member_ids = current_member_ids.concat(update_member_ids)
+      when :replace
+        member_ids = current_member_ids.concat(update_member_ids)
+      when :remove
+        member_ids = current_member_ids - update_member_ids
+      end
+
+      # Only the member addition process is saved by each ids
+      model.public_send("#{ScimRails.config.group_member_relation_attribute}=",
+                        member_ids.uniq)
+      return
+    end
+
     case @op
-    when :add
-      model.attributes = { @path_sp => @value }
-    when :replace
+    when :add, :replace
       model.attributes = { @path_sp => @value }
     when :remove
       model.attributes = { @path_sp => nil }
     end
   end
+
+
+
 
   private
 
@@ -47,8 +72,8 @@ class ScimPatchOperation
       #
       #   Library ignores filter conditions (like [type eq "work"])
       #   and always uses the first element of the array
-      dig_keys = path.gsub(/\[(.+?)\]/, ".0").split(".").map do |step|
-        step == "0" ? 0 : step.to_sym
+      dig_keys = path.gsub(/\[(.+?)\]/, '.0').split('.').map do |step|
+        step == '0' ? 0 : step.to_sym
       end
       mutable_attributes_schema.dig(*dig_keys)
     end
