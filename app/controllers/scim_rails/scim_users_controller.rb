@@ -71,6 +71,27 @@ module ScimRails
       json_scim_response(object: user)
     end
 
+    def destroy
+      unless ScimRails.config.user_destroy_method
+        raise ScimRails::ExceptionHandler::InvalidConfiguration
+      end
+
+      user = @company.public_send(ScimRails.config.scim_users_scope).find(params[:id])
+      raise ActiveRecord::RecordNotFound unless user
+
+      begin
+        user.public_send(ScimRails.config.user_destroy_method)
+      rescue NoMethodError => e
+        raise ScimRails::ExceptionHandler::InvalidConfiguration, e.message
+      rescue ActiveRecord::RecordNotDestroyed => e
+        raise ScimRails::ExceptionHandler::InvalidRequest, e.message
+      rescue => e
+        raise ScimRails::ExceptionHandler::UnexpectedError, e.message
+      end
+
+      head :no_content
+    end
+
     private
 
       def permitted_user_params

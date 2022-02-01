@@ -3,6 +3,8 @@ class User < ApplicationRecord
   has_many :group_users
   has_many :groups, through: :group_users
 
+  before_destroy :check_deletable
+
   validates \
     :first_name,
     :last_name,
@@ -47,5 +49,12 @@ class User < ApplicationRecord
   def unarchive!
     write_attribute(:archived_at, nil)
     save!
+  end
+
+  def check_deletable
+    return if deletable
+
+    errors.add(:base, 'The specified user could not be deleted.')
+    throw :abort
   end
 end

@@ -7,6 +7,9 @@ module ScimRails
     class InvalidCredentials < StandardError
     end
 
+    class InvalidRequest < StandardError
+    end
+
     class InvalidQuery < StandardError
     end
 
@@ -14,6 +17,12 @@ module ScimRails
     end
 
     class UnsupportedDeleteRequest < StandardError
+    end
+
+    class InvalidConfiguration < StandardError
+    end
+
+    class UnexpectedError < StandardError
     end
 
     included do
@@ -47,6 +56,17 @@ module ScimRails
         )
       end
 
+      rescue_from ScimRails::ExceptionHandler::InvalidRequest do |e|
+        json_response(
+          {
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            detail: "Invalid request. #{e.message}",
+            status: "400"
+          },
+          :bad_request
+        )
+      end
+
       rescue_from ScimRails::ExceptionHandler::InvalidQuery do
         json_response(
           {
@@ -63,7 +83,7 @@ module ScimRails
         json_response(
           {
             schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
-            detail: "Invalid PATCH request. This PATCH endpoint only supports deprovisioning and reprovisioning records.",
+            detail: "Invalid PATCH request.",
             status: "422"
           },
           :unprocessable_entity
@@ -78,6 +98,28 @@ module ScimRails
             status: "501"
           },
           :not_implemented
+        )
+      end
+
+      rescue_from ScimRails::ExceptionHandler::InvalidConfiguration do |e|
+        json_response(
+          {
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            detail: "Invalid configuration. #{e.message}",
+            status: "500"
+          },
+          :internal_server_error
+        )
+      end
+
+      rescue_from ScimRails::ExceptionHandler::UnexpectedError do |e|
+        json_response(
+          {
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            detail: "Unexpected Error. #{e.message}",
+            status: "500"
+          },
+          :internal_server_error
         )
       end
 
