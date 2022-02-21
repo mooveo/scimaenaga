@@ -25,6 +25,15 @@ module ScimRails
     class UnexpectedError < StandardError
     end
 
+    class ResourceNotFound < StandardError
+      attr_reader :id
+
+      def initialize(id)
+        super
+        @id = id
+      end
+    end
+
     included do
       if Rails.env.production?
         rescue_from StandardError do |exception|
@@ -123,7 +132,8 @@ module ScimRails
         )
       end
 
-      rescue_from ActiveRecord::RecordNotFound do |e|
+      rescue_from ActiveRecord::RecordNotFound,
+                  ScimRails::ExceptionHandler::ResourceNotFound do |e|
         json_response(
           {
             schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],

@@ -45,7 +45,8 @@ module ScimRails
       :user_schema,
       :group_schema,
       :user_destroy_method,
-      :group_destroy_method
+      :group_destroy_method,
+      :schemas
 
     def initialize
       @basic_auth_model = 'Company'
@@ -59,6 +60,7 @@ module ScimRails
       @user_abbreviated_schema = {}
       @group_schema = {}
       @group_abbreviated_schema = {}
+      @schemas = []
     end
 
     def mutable_user_attributes_schema
