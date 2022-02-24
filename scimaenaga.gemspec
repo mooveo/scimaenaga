@@ -1,12 +1,12 @@
 $:.push File.expand_path('lib', __dir__)
 
 # Maintain your gem's version:
-require 'scim_rails/version'
+require 'scimaenaga/version'
 
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
   s.name = 'scimaenaga'
-  s.version = ScimRails::VERSION
+  s.version = Scimaenaga::VERSION
   s.authors = ['Studist Corporation']
   s.homepage = 'https://github.com/StudistCorporation/scimaenaga'
   s.summary = 'SCIM Adapter for Rails.'
