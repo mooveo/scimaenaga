@@ -44,6 +44,7 @@ module Scimaenaga
         user = @company
                .public_send(Scimaenaga.config.scim_users_scope)
                .find_or_create_by(find_by_username)
+        user.update!(company: @company) if user.company.nil?
         user.update!(permitted_user_params)
       end
       json_scim_response(object: user, status: :created)
